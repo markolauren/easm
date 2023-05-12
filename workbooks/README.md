@@ -21,5 +21,4 @@ Views:
 4. Asset Risk - observations based on latest snapshot (high,med,low) and their cumulative risk
 5. Vulnerabilities & Exploits - correlates web component vulnerabilities and if they are exploitable (correlates asset last seen to web component last seen value, only when those match)
 
-
-
+> NOTICE: if you've just configured the export and there isn't many snapshots yet - the graphs do not have much data to populate yet!
