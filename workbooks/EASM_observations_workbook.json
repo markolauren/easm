@@ -77,7 +77,7 @@
             "queryType": 1,
             "resourceType": "microsoft.resourcegraph/resources",
             "value": [
-              ""
+              "value::all"
             ]
           },
           {
@@ -383,7 +383,7 @@
           {
             "type": 1,
             "content": {
-              "json": "---\r\n## Vulnerabilities"
+              "json": "---\r\n## Vulnerabilities & Exploits\r\n\r\n(uses CISA Known Exploited Vulnerabilities Catalog, https://www.cisa.gov/known-exploited-vulnerabilities-catalog)"
             },
             "name": "text - 4"
           },
@@ -393,7 +393,7 @@
               "version": "KqlItem/1.0",
               "query": "// make a table from https://www.cisa.gov/known-exploited-vulnerabilities-catalog\nlet CISA_NEV = (externaldata(CveId:string,vendorProject:string,product:string,vulnerabilityName:string,dateAdded:string,shortDescription:string,requiredAction:string,dueDate:datetime)\n[@\"https://www.cisa.gov/sites/default/files/csv/known_exploited_vulnerabilities.csv\"] \nwith (format=\"csv\",ignoreFirstRecord=true));\nlet CISA_NEV_CveIDs= CISA_NEV | project CveId;  // make a list from CVEs column\nlet workspace = '{workspace_name}';\nEasmAssetWebComponent_CL\n| where WorkspaceName_s in (workspace)\n| where WebComponentCves_s <> \"[]\"\n| extend vulns = parse_json(WebComponentCves_s)\n| mv-expand vulns\n| extend cve = tostring(vulns.Cve)\n| extend cvss3 = toint(vulns.Cvss3Score)\n| project SnapshotDateTime_t, AssetName_s, WebComponentName_s, WebComponentVersion_s, cve, cvss3, WebComponentLastSeen_t, WorkspaceName_s\n// join with assets' last seen date (show only \"recent\" web components).\n| join kind=leftsemi (EasmAsset_CL\n    | project AssetName_s, AssetLastSeen_t)\n    on $left.WebComponentLastSeen_t == $right.AssetLastSeen_t\n| extend exploit_available = iff(cve in (CISA_NEV_CveIDs), \"yes\", \"no\")\n| join kind=fullouter CISA_NEV on $left.cve == $right.CveId  // Join table of CVEs on devices to CISA NEV table\n| where AssetName_s <> \"\"\n| summarize by AssetName_s, WebComponentName_s, WebComponentVersion_s, cve, cvss3, exploit_available, vendorProject, product, vulnerabilityName, dateAdded, shortDescription, requiredAction\n| summarize count() by exploit_available\n\n",
               "size": 0,
-              "title": "Exploit available",
+              "title": "(choose exploitability to view affected assets)",
               "timeContextFromParameter": "TimeRange",
               "exportFieldName": "",
               "exportParameterName": "exploit",
@@ -873,7 +873,5 @@
         "showBorder": true
       }
     }
-  ],
- "fromTemplateId": "sentinel-UserWorkbook",
-  "$schema": "https://github.com/Microsoft/Application-Insights-Workbooks/blob/master/schema/workbook.json"
+  ]
 }
