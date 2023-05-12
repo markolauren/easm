@@ -2,16 +2,16 @@
 
 In order to use the workbook you need to configure Defender EASM "data connections" / export to your Log Analytics / Sentinel workspace: https://learn.microsoft.com/en-us/azure/external-attack-surface-management/data-connections
 
-Deploy Workbook:
+Deploy:
 1. Copy raw json template
 2. "Add workbook" in Sentinel > Edit > Advanced editor
 3. Replace the template with the workbook json > Apply
 4. Save workbook
 
 Usage:
-1. Choose subscrption/workspace where you've configured the EASM export
+1. Choose subscription/workspace where you've configured the EASM export
 2. Choose EASM workspace name (in case you're exporting multiple workspaces)
-3. Define TimeRange
+3. Define Time Range
 4. Enjoy the views
 
 Views:
