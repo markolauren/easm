@@ -1,5 +1,5 @@
 # Defender EASM stuff
 
-## Workbook
+Azure Monitor / Sentinel Workbook
 
-## Analytics
+Analytics rule for Sentinel
