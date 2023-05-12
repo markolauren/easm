@@ -77,7 +77,7 @@
             "queryType": 1,
             "resourceType": "microsoft.resourcegraph/resources",
             "value": [
-              "/subscriptions/4d7086f1-e6c5-4074-ad96-10c35ea4b626/resourceGroups/Security/providers/Microsoft.OperationalInsights/workspaces/vetonitti-sentinel"
+              ""
             ]
           },
           {
@@ -100,7 +100,7 @@
             },
             "queryType": 0,
             "resourceType": "microsoft.operationalinsights/workspaces",
-            "value": "easmNEW"
+            "value": ""
           },
           {
             "id": "15b2c181-7397-43c1-900a-28e175ae8a6f",
