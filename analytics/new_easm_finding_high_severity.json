@@ -1,0 +1,69 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "workspace": {
+            "type": "String"
+        }
+    },
+    "resources": [
+        {
+            "id": "[concat(resourceId('Microsoft.OperationalInsights/workspaces/providers', parameters('workspace'), 'Microsoft.SecurityInsights'),'/alertRules/ed93d6c2-a4f0-4a8d-a485-d7bd39403e29')]",
+            "name": "[concat(parameters('workspace'),'/Microsoft.SecurityInsights/ed93d6c2-a4f0-4a8d-a485-d7bd39403e29')]",
+            "type": "Microsoft.OperationalInsights/workspaces/providers/alertRules",
+            "kind": "Scheduled",
+            "apiVersion": "2022-09-01-preview",
+            "properties": {
+                "displayName": "New EASM finding",
+                "description": "",
+                "severity": "Medium",
+                "enabled": true,
+                "query": "//let lookback1 = 12h;\nlet lookback2 = 30d;\n//let easmworkspace = \"testSurface\";\nlet sev = \"High Severity\";\n//let sev = \"Medium Severity\";\n// find all observations which have been seen only once within timeline (30d)\nEasmRisk_CL \n//| where WorkspaceName_s == easmworkspace\n| where TimeGenerated > ago(lookback2)\n| where CategoryName_s == sev\n| summarize count() by AssetId_s, MetricDisplayName_s//, SnapshotDateTime_t\n| where count_ == 1\n// join the rest of the infromation to found assets/observations\n| join (EasmRisk_CL)\n    on AssetId_s, MetricDisplayName_s\n// join with latest snapshot date and keep only those\n| join kind=leftsemi (EasmRisk_CL\n    //| where WorkspaceName_s == easmworkspace\n    //| where TimeGenerated > ago(lookback1) \n    | summarize by SnapshotDateTime_t\n    | sort by SnapshotDateTime_t desc \n    | take 1)\n    on SnapshotDateTime_t\n",
+                "queryFrequency": "PT12H",
+                "queryPeriod": "PT12H",
+                "triggerOperator": "GreaterThan",
+                "triggerThreshold": 0,
+                "suppressionDuration": "PT5H",
+                "suppressionEnabled": false,
+                "startTimeUtc": null,
+                "tactics": [],
+                "techniques": [],
+                "alertRuleTemplateName": null,
+                "incidentConfiguration": {
+                    "createIncident": true,
+                    "groupingConfiguration": {
+                        "enabled": true,
+                        "reopenClosedIncident": false,
+                        "lookbackDuration": "PT5H",
+                        "matchingMethod": "AllEntities",
+                        "groupByEntities": [],
+                        "groupByAlertDetails": [],
+                        "groupByCustomDetails": []
+                    }
+                },
+                "eventGroupingSettings": {
+                    "aggregationKind": "AlertPerResult"
+                },
+                "alertDetailsOverride": {
+                    "alertDisplayNameFormat": "New EASM obervation - {{MetricDisplayName_s}}",
+                    "alertDescriptionFormat": "{{MetricDisplayName_s}} found on {{AssetName_s}}",
+                    "alertDynamicProperties": []
+                },
+                "customDetails": null,
+                "entityMappings": [
+                    {
+                        "entityType": "Host",
+                        "fieldMappings": [
+                            {
+                                "identifier": "HostName",
+                                "columnName": "AssetName_s"
+                            }
+                        ]
+                    }
+                ],
+                "sentinelEntitiesMappings": null,
+                "templateVersion": null
+            }
+        }
+    ]
+}
