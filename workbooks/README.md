@@ -4,19 +4,19 @@ Ever wondered how your EASM observations trend? What was the status last week? o
 
 In order to use the workbook you need to configure Defender EASM "data connections" / export to your Log Analytics / Sentinel workspace: https://learn.microsoft.com/en-us/azure/external-attack-surface-management/data-connections
 
-Deploy:
+### Deploy
 1. Copy raw json template (https://raw.githubusercontent.com/markolauren/easm/main/workbooks/EASM_observations_workbook.json)
 2. "Add workbook" in Sentinel > Edit > Advanced editor
 3. Replace the template with the workbook json > Apply
 4. Save workbook
 
-Usage:
+### Usage
 1. Choose subscription/workspace where you've configured the EASM export
 2. Choose EASM workspace name (in case you're exporting multiple workspaces)
 3. Define Time Range
 4. Enjoy the views
 
-Views:
+### Views
 1. All observations - drill into all observations by selecting severity level, observation type, asset
 2. New observations - only new observations from the latest snapshot/export (which were not identified in earlier snapshots)
 3. High/Medium/Low - investigate observations by severity
