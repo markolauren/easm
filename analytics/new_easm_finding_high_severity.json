@@ -15,7 +15,7 @@
             "apiVersion": "2022-09-01-preview",
             "properties": {
                 "displayName": "New EASM finding",
-                "description": "",
+                "description": "Detect new Defender EASM High severity observations which were not present in earlier snapshots",
                 "severity": "Medium",
                 "enabled": true,
                 "query": "let lookback1 = 12h;\n//let easmworkspace = \"yourEasmWorkspaceName\";\nlet sev = \"High Severity\";\n// find all observations which have been seen only once within timeline\nEasmRisk_CL \n//| where WorkspaceName_s == easmworkspace\n| where CategoryName_s == sev\n| summarize count() by AssetId_s, MetricDisplayName_s\n| where count_ == 1\n// join the rest of the infromation to found assets/observations\n| join (EasmRisk_CL)\n    on AssetId_s, MetricDisplayName_s\n// join with latest snapshot date and keep only those\n| join kind=leftsemi (EasmRisk_CL\n    //| where WorkspaceName_s == easmworkspace\n    | where TimeGenerated > ago(lookback1) \n    | summarize by SnapshotDateTime_t\n    | sort by SnapshotDateTime_t desc \n    | take 1)\n    on SnapshotDateTime_t\n",
