@@ -4,7 +4,7 @@ v0.03b ("works in my computer")
 In order to use the analytics rule you need to configure Defender EASM "data connections" / export to your Log Analytics / Sentinel workspace: https://learn.microsoft.com/en-us/azure/external-attack-surface-management/data-connections
 
 ### Use case
-- Detect High severity observations which are not present in earlier EASM snapshots
+- Detect new High severity observations which are not present in earlier EASM snapshots
 
 ### Setup
 - Download the new_easm_finding_high_severity.json
