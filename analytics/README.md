@@ -14,3 +14,6 @@ In order to use the analytics rule you need to configure Defender EASM "data con
 - If you're exporting multiple EASM workspaces to your Sentinel, you need to create separate analytics rules for them (once imported, "clone")
   - Uncomment line 2 and specify your EASM workspace name: "//let easmworkspace = "yourEasmWorkspaceName";"
   - Uncomment lines 6 & 15: "//| where WorkspaceName_s == easmworkspace"
+- Feel free to modify the rule to 
+  - Include also Medium observations
+  - Include/Exclude specific observations
