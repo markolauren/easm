@@ -17,3 +17,7 @@ In order to use the analytics rule you need to configure Defender EASM "data con
 - Feel free to modify the rule to 
   - Include also Medium observations
   - Include/Exclude specific observations
+
+
+## Incident in Sentinel
+![image](https://github.com/markolauren/easm/assets/133347791/3dadb37c-58ed-471c-b9e7-230cfc163df9)
