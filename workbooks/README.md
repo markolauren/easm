@@ -1,14 +1,17 @@
 # Defender EASM Sentinel Workbook
 
-Ever wondered how your EASM observations trend? What was the status last week? or before that?
+Ever wondered how your EASM observations trend? What was the status last week? or before that? Which are the most risky assets? Are there vulnerabilities with exploit available?
 
-In order to use the workbook you need to configure Defender EASM "data connections" / export to your Log Analytics / Sentinel workspace: https://learn.microsoft.com/en-us/azure/external-attack-surface-management/data-connections
+(In order to use the workbook you need to configure Defender EASM "data connections" / export to your Log Analytics / Sentinel workspace: https://learn.microsoft.com/en-us/azure/external-attack-surface-management/data-connections)
+
+### NEW
+- Snapshot Browser
+- Asset Browser
+- Improvements across views 
+
+
 
 ### Deploy
-
-[![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Fmarkolauren%2Feasm%2Fmain%2Fworkbooks%2FEASM_observations_workbook_ARM_template.json)
-
-OR
 1. Copy raw json template (https://raw.githubusercontent.com/markolauren/easm/main/workbooks/EASM_observations_workbook.json)
 2. "Add workbook" in Sentinel > Edit > Advanced editor
 3. Replace the template with the workbook json > Apply
@@ -22,10 +25,11 @@ OR
 
 ### Views
 1. All observations - drill into all observations by selecting severity level, observation type, asset
-2. New observations - only new observations from the latest snapshot/export (which were not identified in earlier snapshots)
-3. High/Medium/Low - investigate observations by severity
-4. Asset Risk - observations based on latest snapshot (high,med,low) and their cumulative risk
-5. Vulnerabilities & Exploits - correlates web component vulnerabilities and if they are exploitable (correlates asset last seen to web component last seen value, only when those match)
+2. Asset Risk - observations based on latest snapshot (high,med,low) and their cumulative risk
+3. Vulnerabilities & Exploits - correlates web component vulnerabilities and if they are exploitable (correlates asset last seen to web component last seen value, only when those match). choose yes/no from the exploit available piechart to drill into vulnerabilities. choose an asset to see all related observations and all related vulnerabilities.
+4. Snapshot Browser - choose a snapshot to view new observations and all observations (high, med, low) in particular snapshot. drill in by choosing an observation.
+5. Asset Browser - search by asset name (and hit enter), then choose an asset from search results. view observations over time and vulnerabilities & exploits.
+6. High/Medium/Low - investigate observations by severity
 
 > NOTICE: if you've just configured the export and there isn't many snapshots yet - the graphs do not have much data to populate yet!
 
