@@ -5,6 +5,10 @@ Ever wondered how your EASM observations trend? What was the status last week? o
 In order to use the workbook you need to configure Defender EASM "data connections" / export to your Log Analytics / Sentinel workspace: https://learn.microsoft.com/en-us/azure/external-attack-surface-management/data-connections
 
 ### Deploy
+
+[![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Fmarkolauren%2Feasm%2Fmain%2Fworkbooks%2FEASM_observations_workbook_ARM_template.json)
+
+OR
 1. Copy raw json template (https://raw.githubusercontent.com/markolauren/easm/main/workbooks/EASM_observations_workbook.json)
 2. "Add workbook" in Sentinel > Edit > Advanced editor
 3. Replace the template with the workbook json > Apply
