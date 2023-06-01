@@ -12,11 +12,10 @@
     "workbookSourceId": {
       "type": "string",
       "defaultValue": "[resourceGroup().id]"
-    },
+     },
     "workbookId": {
       "type": "string",
       "defaultValue": "[newGuid()]"
-      }
     }
   },
   "resources": [
