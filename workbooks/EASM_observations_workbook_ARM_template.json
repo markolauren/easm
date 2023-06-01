@@ -3,19 +3,31 @@
   "parameters": {
     "workbookDisplayName": {
       "type": "string",
-      "defaultValue": "EASM Observations"
+      "defaultValue": "EASM Observations",
+      "metadata": {
+        "description": "Defender EASM Observations workbook to visualize history snapshots and trends."
+      }
     },
     "workbookType": {
       "type": "string",
-      "defaultValue": "sentinel"
+      "defaultValue": "sentinel",
+      "metadata": {
+        "description": "The gallery that the workbook will been shown under. Supported values include workbook, tsg, etc. Usually, this is 'workbook'"
+      }
     },
     "workbookSourceId": {
       "type": "string",
-      "defaultValue": "[resourceGroup().id]"
-     },
+      "defaultValue": "[resourceGroup().id]",
+      "metadata": {
+        "description": "The id of resource instance to which the workbook will be associated"
+      }
+    },
     "workbookId": {
       "type": "string",
-      "defaultValue": "[newGuid()]"
+      "defaultValue": "[newGuid()]",
+      "metadata": {
+        "description": "The unique guid for this workbook instance"
+      }
     }
   },
   "resources": [
