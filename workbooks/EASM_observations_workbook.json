@@ -2,13 +2,6 @@
   "version": "Notebook/1.0",
   "items": [
     {
-      "type": 1,
-      "content": {
-        "json": "## EASM observation trends"
-      },
-      "name": "text - 2"
-    },
-    {
       "type": 9,
       "content": {
         "version": "KqlParameterItem/1.0",
@@ -148,6 +141,7 @@
       "content": {
         "version": "LinkItem/1.0",
         "style": "tabs",
+        "tabStyle": "bigger",
         "links": [
           {
             "id": "18c690d7-7cbd-46c1-b677-1f72692d40cd",
@@ -159,11 +153,35 @@
             "style": "link"
           },
           {
+            "id": "f88dcf47-af98-4684-9de3-1ee5f48f68fc",
+            "cellValue": "TAB",
+            "linkTarget": "parameter",
+            "linkLabel": "Asset Risk",
+            "subTarget": "Assets",
+            "style": "link"
+          },
+          {
+            "id": "e5e949fa-fedf-40a2-9cf9-c826cde3606f",
+            "cellValue": "TAB",
+            "linkTarget": "parameter",
+            "linkLabel": "Vulnerabilities & Exploits",
+            "subTarget": "Vulnerabilities",
+            "style": "link"
+          },
+          {
             "id": "83adab4f-c103-4634-bf87-1df21fdffeba",
             "cellValue": "TAB",
             "linkTarget": "parameter",
-            "linkLabel": "New observations",
+            "linkLabel": "Snapshot Browser",
             "subTarget": "New",
+            "style": "link"
+          },
+          {
+            "id": "8b299bf8-f410-49d7-8280-dfe4567ba2be",
+            "cellValue": "TAB",
+            "linkTarget": "parameter",
+            "linkLabel": "Asset Browser",
+            "subTarget": "AssetBrowser",
             "style": "link"
           },
           {
@@ -188,22 +206,6 @@
             "linkTarget": "parameter",
             "linkLabel": "Low",
             "subTarget": "Low",
-            "style": "link"
-          },
-          {
-            "id": "f88dcf47-af98-4684-9de3-1ee5f48f68fc",
-            "cellValue": "TAB",
-            "linkTarget": "parameter",
-            "linkLabel": "Asset Risk",
-            "subTarget": "Assets",
-            "style": "link"
-          },
-          {
-            "id": "e5e949fa-fedf-40a2-9cf9-c826cde3606f",
-            "cellValue": "TAB",
-            "linkTarget": "parameter",
-            "linkLabel": "Vulnerabilities & Exploits",
-            "subTarget": "Vulnerabilities",
             "style": "link"
           }
         ]
@@ -302,7 +304,7 @@
             "type": 3,
             "content": {
               "version": "KqlItem/1.0",
-              "query": "let observation_ = dynamic({observation});\r\nlet workspace = '{workspace_name}';\r\nEasmRisk_CL\r\n| where WorkspaceName_s in (workspace)\r\n| extend metric = parse_json(tostring(observation_)).MetricDisplayName_s\r\n| extend snaptime = todatetime(observation_.SnapshotDateTime_t)\r\n| where SnapshotDateTime_t == snaptime\r\n| where MetricDisplayName_s == metric\r\n| project AssetName_s//, SnapshotDateTime_t, MetricDisplayName_s\r\n",
+              "query": "let observation_ = dynamic({observation});\r\nlet workspace = '{workspace_name}';\r\nEasmRisk_CL\r\n| where WorkspaceName_s in (workspace)\r\n| extend metric = parse_json(tostring(observation_)).MetricDisplayName_s\r\n| extend snaptime = todatetime(observation_.SnapshotDateTime_t)\r\n| where SnapshotDateTime_t == snaptime\r\n| where MetricDisplayName_s == metric\r\n| project AssetName_s, AssetDescription_s//, SnapshotDateTime_t, MetricDisplayName_s\r\n",
               "size": 1,
               "title": "(select asset to view all related observations)",
               "timeContextFromParameter": "TimeRange",
@@ -383,7 +385,7 @@
           {
             "type": 1,
             "content": {
-              "json": "---\r\n## Vulnerabilities & Exploits\r\n\r\n(uses CISA Known Exploited Vulnerabilities Catalog, https://www.cisa.gov/known-exploited-vulnerabilities-catalog)"
+              "json": "---\r\n## Vulnerabilities"
             },
             "name": "text - 4"
           },
@@ -393,7 +395,7 @@
               "version": "KqlItem/1.0",
               "query": "// make a table from https://www.cisa.gov/known-exploited-vulnerabilities-catalog\nlet CISA_NEV = (externaldata(CveId:string,vendorProject:string,product:string,vulnerabilityName:string,dateAdded:string,shortDescription:string,requiredAction:string,dueDate:datetime)\n[@\"https://www.cisa.gov/sites/default/files/csv/known_exploited_vulnerabilities.csv\"] \nwith (format=\"csv\",ignoreFirstRecord=true));\nlet CISA_NEV_CveIDs= CISA_NEV | project CveId;  // make a list from CVEs column\nlet workspace = '{workspace_name}';\nEasmAssetWebComponent_CL\n| where WorkspaceName_s in (workspace)\n| where WebComponentCves_s <> \"[]\"\n| extend vulns = parse_json(WebComponentCves_s)\n| mv-expand vulns\n| extend cve = tostring(vulns.Cve)\n| extend cvss3 = toint(vulns.Cvss3Score)\n| project SnapshotDateTime_t, AssetName_s, WebComponentName_s, WebComponentVersion_s, cve, cvss3, WebComponentLastSeen_t, WorkspaceName_s\n// join with assets' last seen date (show only \"recent\" web components).\n| join kind=leftsemi (EasmAsset_CL\n    | project AssetName_s, AssetLastSeen_t)\n    on $left.WebComponentLastSeen_t == $right.AssetLastSeen_t\n| extend exploit_available = iff(cve in (CISA_NEV_CveIDs), \"yes\", \"no\")\n| join kind=fullouter CISA_NEV on $left.cve == $right.CveId  // Join table of CVEs on devices to CISA NEV table\n| where AssetName_s <> \"\"\n| summarize by AssetName_s, WebComponentName_s, WebComponentVersion_s, cve, cvss3, exploit_available, vendorProject, product, vulnerabilityName, dateAdded, shortDescription, requiredAction\n| summarize count() by exploit_available\n\n",
               "size": 0,
-              "title": "(choose exploitability to view affected assets)",
+              "title": "Exploit available",
               "timeContextFromParameter": "TimeRange",
               "exportFieldName": "",
               "exportParameterName": "exploit",
@@ -473,7 +475,8 @@
               "query": "let exploit_ = dynamic({exploit});\r\n// make a table from https://www.cisa.gov/known-exploited-vulnerabilities-catalog\r\nlet CISA_NEV = (externaldata(CveId:string,vendorProject:string,product:string,vulnerabilityName:string,dateAdded:string,shortDescription:string,requiredAction:string,dueDate:datetime)\r\n[@\"https://www.cisa.gov/sites/default/files/csv/known_exploited_vulnerabilities.csv\"] \r\nwith (format=\"csv\",ignoreFirstRecord=true));\r\nlet CISA_NEV_CveIDs= CISA_NEV | project CveId;  // make a list from CVEs column\r\nlet workspace = '{workspace_name}';\r\nEasmAssetWebComponent_CL\r\n| where WorkspaceName_s in (workspace)| extend test = parse_json(tostring(exploit_)).series\r\n| where WebComponentCves_s <> \"[]\"\r\n| extend vulns = parse_json(WebComponentCves_s)\r\n| mv-expand vulns\r\n| extend cve = tostring(vulns.Cve)\r\n| extend cvss3 = round(todouble(vulns.Cvss3Score),2)\r\n| project SnapshotDateTime_t, AssetName_s, WebComponentName_s, WebComponentVersion_s, cve, cvss3, WebComponentLastSeen_t, WorkspaceName_s, test\r\n// join with assets' last seen date (show only \"recent\" web components).\r\n| join kind=leftsemi (EasmAsset_CL\r\n    | project AssetName_s, AssetLastSeen_t)\r\n    on $left.WebComponentLastSeen_t == $right.AssetLastSeen_t\r\n| extend exploit_available = iff(cve in (CISA_NEV_CveIDs), \"yes\", \"no\")\r\n| where exploit_available == test\r\n| join kind=fullouter CISA_NEV on $left.cve == $right.CveId  // Join table of CVEs on devices to CISA NEV table\r\n| where AssetName_s <> \"\"\r\n| summarize by Asset=AssetName_s, Component=WebComponentName_s, Version=WebComponentVersion_s, CVE=cve, CVSS3=cvss3, Exploit=exploit_available, Vendor=vendorProject, Product=product, Vulnerability=vulnerabilityName, Description=shortDescription\r\n| order by CVSS3 desc",
               "size": 0,
               "timeContextFromParameter": "TimeRange",
-              "exportParameterName": "observation",
+              "exportFieldName": "Asset",
+              "exportParameterName": "assetname",
               "queryType": 0,
               "resourceType": "microsoft.operationalinsights/workspaces",
               "crossComponentResources": [
@@ -484,6 +487,40 @@
             },
             "customWidth": "70",
             "name": "All - data1"
+          },
+          {
+            "type": 3,
+            "content": {
+              "version": "KqlItem/1.0",
+              "query": "let asset_ = '{assetname}';\r\nlet workspace = '{workspace_name}';\r\nEasmRisk_CL\r\n| where WorkspaceName_s in (workspace)\r\n| where AssetName_s == asset_\r\n| project CategoryName_s, MetricDisplayName_s, SnapshotDateTime_t\r\n| order by SnapshotDateTime_t desc",
+              "size": 0,
+              "title": "Asset's Risk Observations over time",
+              "timeContextFromParameter": "TimeRange",
+              "queryType": 0,
+              "resourceType": "microsoft.operationalinsights/workspaces",
+              "crossComponentResources": [
+                "{Workspace}"
+              ]
+            },
+            "customWidth": "50",
+            "name": "query - 3"
+          },
+          {
+            "type": 3,
+            "content": {
+              "version": "KqlItem/1.0",
+              "query": "let asset_ = '{assetname}';\r\nlet workspace = '{workspace_name}';\r\nEasmAssetWebComponent_CL\r\n| where WorkspaceName_s in (workspace)\r\n| where AssetName_s == asset_\r\n//| extend test = parse_json(tostring(exploit_)).series\r\n| where WebComponentCves_s <> \"[]\"\r\n| extend vulns = parse_json(WebComponentCves_s)\r\n| mv-expand vulns\r\n| extend cve = tostring(vulns.Cve)\r\n| extend cvss3 = round(todouble(vulns.Cvss3Score),2)\r\n| project SnapshotDateTime_t, AssetName_s, WebComponentName_s, WebComponentVersion_s, cve, cvss3, WebComponentLastSeen_t, WorkspaceName_s\r\n// join with assets' last seen date (show only \"recent\" web components).\r\n| join kind=leftsemi (EasmAsset_CL\r\n    | project AssetName_s, AssetLastSeen_t)\r\n    on $left.WebComponentLastSeen_t == $right.AssetLastSeen_t\r\n| summarize by Component=WebComponentName_s, Version=WebComponentVersion_s, CVE=cve, CVSS3=cvss3\r\n| order by CVSS3 desc",
+              "size": 0,
+              "title": "Asset's All Vulnerabilities",
+              "timeContextFromParameter": "TimeRange",
+              "queryType": 0,
+              "resourceType": "microsoft.operationalinsights/workspaces",
+              "crossComponentResources": [
+                "{Workspace}"
+              ]
+            },
+            "customWidth": "50",
+            "name": "query - 4"
           }
         ]
       },
@@ -727,7 +764,7 @@
           {
             "type": 1,
             "content": {
-              "json": "---\r\n## Assets by Risk - based on latest snapshot\r\n\r\n(high risk score = 10, medium = 5, low = 1)"
+              "json": "---\r\n## Assets by Risk - based on latest snapshot\r\n\r\n(Risk Score - high severity = 10pt, medium = 5pt, low = 1pt)"
             },
             "name": "text - 2"
           },
@@ -810,7 +847,7 @@
             "type": 3,
             "content": {
               "version": "KqlItem/1.0",
-              "query": "let assetname_ = dynamic({assetname});\r\nlet workspace = '{workspace_name}';\r\nEasmRisk_CL\r\n| where WorkspaceName_s in (workspace)\r\n| extend test = parse_json(tostring(assetname_)).AssetName_s\r\n| where AssetName_s == test\r\n| summarize by MetricDisplayName_s, AssetType_s, AssetName_s, AssetFirstSeen_t, AssetLastSeen_t",
+              "query": "let assetname_ = dynamic({assetname});\r\nlet workspace = '{workspace_name}';\r\nEasmRisk_CL\r\n| where WorkspaceName_s in (workspace)\r\n| extend test = parse_json(tostring(assetname_)).AssetName_s\r\n| where AssetName_s == test\r\n| summarize by CategoryName_s, MetricDisplayName_s, AssetType_s, AssetName_s, AssetDescription_s",
               "size": 0,
               "timeContextFromParameter": "TimeRange",
               "queryType": 0,
@@ -843,23 +880,174 @@
           {
             "type": 1,
             "content": {
-              "json": "---\r\nNew observations (high, medium)\r\n---\r\n(based on latest snapshot. all observations which were not seen earlier for particular asset in 30d)"
+              "json": "---\r\nSnapshot Browser\r\n---"
             },
             "name": "text - 2"
+          },
+          {
+            "type": 9,
+            "content": {
+              "version": "KqlParameterItem/1.0",
+              "crossComponentResources": [
+                "{Workspace}"
+              ],
+              "parameters": [
+                {
+                  "id": "e4959c6c-8acb-431f-ac97-27963fe106b2",
+                  "version": "KqlParameterItem/1.0",
+                  "name": "Snapshot",
+                  "type": 2,
+                  "isRequired": true,
+                  "query": "let workspace = '{workspace_name}';\r\nEasmRisk_CL \r\n| where WorkspaceName_s in (workspace)\r\n| summarize by snap=SnapshotDateTime_t\r\n| order by snap desc",
+                  "crossComponentResources": [
+                    "{Workspace}"
+                  ],
+                  "typeSettings": {
+                    "additionalResourceOptions": [],
+                    "showDefault": false
+                  },
+                  "timeContext": {
+                    "durationMs": 0
+                  },
+                  "timeContextFromParameter": "TimeRange",
+                  "queryType": 0,
+                  "resourceType": "microsoft.operationalinsights/workspaces",
+                  "value": null,
+                  "label": "Choose a Snapshot"
+                }
+              ],
+              "style": "above",
+              "queryType": 0,
+              "resourceType": "microsoft.operationalinsights/workspaces"
+            },
+            "name": "parameters - 2"
+          },
+          {
+            "type": 1,
+            "content": {
+              "json": "---\r\nNew observations in selected snapshot (high, medium, low)\r\n---\r\n(observations not seen before)\r\n"
+            },
+            "name": "text - 6"
           },
           {
             "type": 3,
             "content": {
               "version": "KqlItem/1.0",
-              "query": "let lookback1 = 10d;\r\nlet lookback2 = 30d;\r\nlet sev = \"High Severity\";\r\nlet sev2 = \"Medium Severity\";\r\nlet workspace = '{workspace_name}';\r\n// find all observations which have been seen only once within timeline (30d)\r\nEasmRisk_CL \r\n| where WorkspaceName_s in (workspace)\r\n| where TimeGenerated > ago(lookback2)\r\n| where CategoryName_s == sev or CategoryName_s == sev2 \r\n| summarize count() by AssetId_s, MetricDisplayName_s//, SnapshotDateTime_t\r\n| where count_ == 1\r\n// join the rest of the infromation to found assets/observations\r\n| join (EasmRisk_CL)\r\non AssetId_s, MetricDisplayName_s\r\n// join with latest snapshot date and keep only those\r\n| join kind=leftsemi (EasmRisk_CL\r\n    | where WorkspaceName_s in (workspace)\r\n    | where TimeGenerated > ago(lookback1) \r\n    | summarize by SnapshotDateTime_t\r\n    | sort by SnapshotDateTime_t desc \r\n    | take 1)\r\n    on SnapshotDateTime_t\r\n| project SnapshotDateTime_t, AssetName_s, AssetType_s, CategoryName_s, MetricDisplayName_s, AssetFirstSeen_t, AssetLastSeen_t\r\n| order by CategoryName_s asc\r\n",
+              "query": "//let lookback1 = 10d;\r\nlet lookback2 = 30d;\r\nlet sev = \"High Severity\";\r\nlet sev2 = \"Medium Severity\";\r\nlet sev3 = \"Low Severity\";\r\nlet workspace = '{workspace_name}';\r\n// find all observations which have been seen only once within timeline (30d)\r\nEasmRisk_CL \r\n| where WorkspaceName_s in (workspace)\r\n| where TimeGenerated > ago(lookback2)\r\n| where SnapshotDateTime_t <= datetime('{Snapshot}')\r\n| where CategoryName_s == sev or CategoryName_s == sev2 or CategoryName_s == sev3\r\n| summarize count() by AssetId_s, MetricDisplayName_s//, SnapshotDateTime_t\r\n| where count_ == 1\r\n// join the rest of the infromation to found assets/observations\r\n| join (EasmRisk_CL)\r\non AssetId_s, MetricDisplayName_s\r\n| where SnapshotDateTime_t == datetime('{Snapshot}')\r\n| project SnapshotDateTime_t, CategoryName_s, MetricDisplayName_s, AssetName_s, AssetDescription_s, AssetType_s, AssetFirstSeen_t, AssetLastSeen_t\r\n| order by CategoryName_s asc\r\n\r\n",
+              "size": 1,
+              "timeContextFromParameter": "TimeRange",
+              "queryType": 0,
+              "resourceType": "microsoft.operationalinsights/workspaces",
+              "crossComponentResources": [
+                "{Workspace}"
+              ],
+              "gridSettings": {
+                "sortBy": [
+                  {
+                    "itemKey": "MetricDisplayName_s",
+                    "sortOrder": 1
+                  }
+                ]
+              },
+              "sortBy": [
+                {
+                  "itemKey": "MetricDisplayName_s",
+                  "sortOrder": 1
+                }
+              ]
+            },
+            "name": "query - 10"
+          },
+          {
+            "type": 1,
+            "content": {
+              "json": "---\r\nAll observations in selected snapshot (high, medium, low)\r\n---"
+            },
+            "name": "text - 6 - Copy"
+          },
+          {
+            "type": 3,
+            "content": {
+              "version": "KqlItem/1.0",
+              "query": "let workspace = '{workspace_name}';\r\nEasmRisk_CL \r\n| where WorkspaceName_s in (workspace)\r\n| where SnapshotDateTime_t == datetime('{Snapshot}')\r\n| where CategoryName_s == \"High Severity\"\r\n//| extend Priority = 'High'\r\n//| project Priority, MetricDisplayName_s, AssetName_s\r\n| summarize Count=count() by MetricDisplayName_s\r\n| order by Count desc \r\n\r\n",
               "size": 0,
+              "title": "HIGH",
+              "timeContextFromParameter": "TimeRange",
+              "exportFieldName": "MetricDisplayName_s",
+              "exportParameterName": "_high",
+              "exportDefaultValue": "empty",
               "queryType": 0,
               "resourceType": "microsoft.operationalinsights/workspaces",
               "crossComponentResources": [
                 "{Workspace}"
               ]
             },
-            "name": "query - 10"
+            "customWidth": "33",
+            "name": "query - 3",
+            "styleSettings": {
+              "showBorder": true
+            }
+          },
+          {
+            "type": 3,
+            "content": {
+              "version": "KqlItem/1.0",
+              "query": "let workspace = '{workspace_name}';\r\nEasmRisk_CL \r\n| where WorkspaceName_s in (workspace)\r\n| where SnapshotDateTime_t == datetime('{Snapshot}')\r\n| where CategoryName_s == \"Medium Severity\"\r\n//| extend Priority = 'High'\r\n//| project Priority, MetricDisplayName_s, AssetName_s\r\n| summarize Count=count() by MetricDisplayName_s\r\n| order by Count desc \r\n\r\n",
+              "size": 0,
+              "title": "MEDIUM",
+              "timeContextFromParameter": "TimeRange",
+              "exportFieldName": "MetricDisplayName_s",
+              "exportParameterName": "_med",
+              "exportDefaultValue": "empty",
+              "queryType": 0,
+              "resourceType": "microsoft.operationalinsights/workspaces",
+              "crossComponentResources": [
+                "{Workspace}"
+              ]
+            },
+            "customWidth": "33",
+            "name": "query - 3 - Copy",
+            "styleSettings": {
+              "showBorder": true
+            }
+          },
+          {
+            "type": 3,
+            "content": {
+              "version": "KqlItem/1.0",
+              "query": "let workspace = '{workspace_name}';\r\nEasmRisk_CL \r\n| where WorkspaceName_s in (workspace)\r\n| where SnapshotDateTime_t == datetime('{Snapshot}')\r\n| where CategoryName_s == \"Low Severity\"\r\n//| extend Priority = 'High'\r\n//| project Priority, MetricDisplayName_s, AssetName_s\r\n| summarize Count=count() by MetricDisplayName_s\r\n| order by Count desc \r\n\r\n",
+              "size": 0,
+              "title": "LOW",
+              "timeContextFromParameter": "TimeRange",
+              "exportFieldName": "MetricDisplayName_s",
+              "exportParameterName": "_low",
+              "exportDefaultValue": "empty",
+              "queryType": 0,
+              "resourceType": "microsoft.operationalinsights/workspaces",
+              "crossComponentResources": [
+                "{Workspace}"
+              ]
+            },
+            "customWidth": "33",
+            "name": "query - 3 - Copy - Copy",
+            "styleSettings": {
+              "showBorder": true
+            }
+          },
+          {
+            "type": 3,
+            "content": {
+              "version": "KqlItem/1.0",
+              "query": "let high = '{_high}';\r\nlet med = '{_med}';\r\nlet low = '{_low}';\r\nlet workspace = '{workspace_name}';\r\n// find all observations which have been seen only once within timeline (30d)\r\nEasmRisk_CL \r\n| where SnapshotDateTime_t == datetime('{Snapshot}')\r\n| where MetricDisplayName_s in (high, med, low)\r\n| project CategoryName_s,MetricDisplayName_s,AssetName_s,AssetLastSeen_t,AssetDescription_s, SnapshotDateTime_t\r\n| order by CategoryName_s asc\r\n",
+              "size": 0,
+              "timeContextFromParameter": "TimeRange",
+              "queryType": 0,
+              "resourceType": "microsoft.operationalinsights/workspaces",
+              "crossComponentResources": [
+                "{Workspace}"
+              ]
+            },
+            "name": "query - 8"
           }
         ]
       },
@@ -869,6 +1057,159 @@
         "value": "New"
       },
       "name": "New",
+      "styleSettings": {
+        "showBorder": true
+      }
+    },
+    {
+      "type": 12,
+      "content": {
+        "version": "NotebookGroup/1.0",
+        "groupType": "editable",
+        "items": [
+          {
+            "type": 1,
+            "content": {
+              "json": "---\r\nAsset Browser\r\n---"
+            },
+            "name": "text - 2"
+          },
+          {
+            "type": 9,
+            "content": {
+              "version": "KqlParameterItem/1.0",
+              "crossComponentResources": [
+                "{Workspace}"
+              ],
+              "parameters": [
+                {
+                  "id": "d0f9b2be-b6c2-42c3-8e4b-527f0e5651f7",
+                  "version": "KqlParameterItem/1.0",
+                  "name": "AssetSearch",
+                  "label": "Asset Search",
+                  "type": 1,
+                  "isRequired": true,
+                  "timeContext": {
+                    "durationMs": 7776000000
+                  },
+                  "timeContextFromParameter": "TimeRange",
+                  "value": ""
+                },
+                {
+                  "id": "e4959c6c-8acb-431f-ac97-27963fe106b2",
+                  "version": "KqlParameterItem/1.0",
+                  "name": "AssetName",
+                  "label": "Choose Asset",
+                  "type": 2,
+                  "isRequired": true,
+                  "query": "let workspace = '{workspace_name}';\r\nlet s = ('{AssetSearch}');\r\nEasmAsset_CL \r\n| where WorkspaceName_s in (workspace)\r\n| where AssetName_s contains s\r\n| distinct AssetName_s\r\n",
+                  "crossComponentResources": [
+                    "{Workspace}"
+                  ],
+                  "typeSettings": {
+                    "additionalResourceOptions": [],
+                    "showDefault": false
+                  },
+                  "timeContext": {
+                    "durationMs": 0
+                  },
+                  "timeContextFromParameter": "TimeRange",
+                  "queryType": 0,
+                  "resourceType": "microsoft.operationalinsights/workspaces",
+                  "value": "www.tammela.fi"
+                }
+              ],
+              "style": "above",
+              "queryType": 0,
+              "resourceType": "microsoft.operationalinsights/workspaces"
+            },
+            "name": "parameters - 2"
+          },
+          {
+            "type": 3,
+            "content": {
+              "version": "KqlItem/1.0",
+              "query": "let workspace = '{workspace_name}';\r\nEasmAsset_CL\r\n| where WorkspaceName_s in (workspace)\r\n| where AssetName_s == '{AssetName}'\r\n//| summarize Count=count() by MetricDisplayName_s, SnapshotDateTime_t\r\n| project SnapshotDateTime_t, AssetName_s, AssetType_s, AssetFirstSeen_t, AssetLastSeen_t\r\n| order by SnapshotDateTime_t desc\r\n| take 1\r\n",
+              "size": 4,
+              "timeContextFromParameter": "TimeRange",
+              "queryType": 0,
+              "resourceType": "microsoft.operationalinsights/workspaces",
+              "crossComponentResources": [
+                "{Workspace}"
+              ]
+            },
+            "name": "query - 7"
+          },
+          {
+            "type": 1,
+            "content": {
+              "json": "---\r\nAll observations over time (high, medium, low)\r\n---"
+            },
+            "name": "text - 6 - Copy"
+          },
+          {
+            "type": 3,
+            "content": {
+              "version": "KqlItem/1.0",
+              "query": "let workspace = '{workspace_name}';\r\nEasmRisk_CL\r\n| where WorkspaceName_s in (workspace)\r\n//| where CategoryName_s == \"High Severity\"\r\n| where AssetName_s == '{AssetName}'\r\n| summarize Count=count() by MetricDisplayName_s, SnapshotDateTime_t\r\n",
+              "size": 0,
+              "timeContextFromParameter": "TimeRange",
+              "queryType": 0,
+              "resourceType": "microsoft.operationalinsights/workspaces",
+              "crossComponentResources": [
+                "{Workspace}"
+              ],
+              "visualization": "areachart"
+            },
+            "customWidth": "50",
+            "name": "query - 8"
+          },
+          {
+            "type": 3,
+            "content": {
+              "version": "KqlItem/1.0",
+              "query": "let workspace = '{workspace_name}';\r\nEasmRisk_CL\r\n| where WorkspaceName_s in (workspace)\r\n//| where CategoryName_s == \"High Severity\"\r\n| where AssetName_s == '{AssetName}'\r\n| summarize by CategoryName_s, MetricDisplayName_s, SnapshotDateTime_t\r\n| order by SnapshotDateTime_t desc\r\n",
+              "size": 0,
+              "timeContextFromParameter": "TimeRange",
+              "queryType": 0,
+              "resourceType": "microsoft.operationalinsights/workspaces",
+              "crossComponentResources": [
+                "{Workspace}"
+              ]
+            },
+            "customWidth": "50",
+            "name": "query - 4"
+          },
+          {
+            "type": 1,
+            "content": {
+              "json": "---\r\nVulnerabilities & Exploits\r\n---"
+            },
+            "name": "text - 6 - Copy - Copy"
+          },
+          {
+            "type": 3,
+            "content": {
+              "version": "KqlItem/1.0",
+              "query": "let asset_ = '{AssetName}';\r\n// make a table from https://www.cisa.gov/known-exploited-vulnerabilities-catalog\r\nlet CISA_NEV = (externaldata(CveId:string,vendorProject:string,product:string,vulnerabilityName:string,dateAdded:string,shortDescription:string,requiredAction:string,dueDate:datetime)\r\n[@\"https://www.cisa.gov/sites/default/files/csv/known_exploited_vulnerabilities.csv\"] \r\nwith (format=\"csv\",ignoreFirstRecord=true));\r\nlet CISA_NEV_CveIDs= CISA_NEV | project CveId;  // make a list from CVEs column\r\nlet workspace = '{workspace_name}';\r\nEasmAssetWebComponent_CL\r\n| where AssetName_s == asset_\r\n| where WorkspaceName_s in (workspace)\r\n| where WebComponentCves_s <> \"[]\"\r\n| extend vulns = parse_json(WebComponentCves_s)\r\n| mv-expand vulns\r\n| extend cve = tostring(vulns.Cve)\r\n| extend cvss3 = round(todouble(vulns.Cvss3Score),2)\r\n| project SnapshotDateTime_t, AssetName_s, WebComponentName_s, WebComponentVersion_s, cve, cvss3, WebComponentLastSeen_t, WorkspaceName_s\r\n// join with assets' last seen date (show only \"recent\" web components).\r\n| join kind=leftsemi (EasmAsset_CL\r\n    | project AssetName_s, AssetLastSeen_t)\r\n    on $left.WebComponentLastSeen_t == $right.AssetLastSeen_t\r\n| extend exploit_available = iff(cve in (CISA_NEV_CveIDs), \"yes\", \"no\")\r\n| join kind=fullouter CISA_NEV on $left.cve == $right.CveId  // Join table of CVEs on devices to CISA NEV table\r\n| where AssetName_s <> \"\"\r\n| summarize by Asset=AssetName_s, Component=WebComponentName_s, Version=WebComponentVersion_s, CVE=cve, CVSS3=cvss3, Exploit=exploit_available, Vendor=vendorProject, Product=product, Vulnerability=vulnerabilityName, Description=shortDescription\r\n| order by CVSS3 desc",
+              "size": 0,
+              "timeContextFromParameter": "TimeRange",
+              "queryType": 0,
+              "resourceType": "microsoft.operationalinsights/workspaces",
+              "crossComponentResources": [
+                "{Workspace}"
+              ]
+            },
+            "name": "query - 5"
+          }
+        ]
+      },
+      "conditionalVisibility": {
+        "parameterName": "TAB",
+        "comparison": "isEqualTo",
+        "value": "AssetBrowser"
+      },
+      "name": "New - Copy",
       "styleSettings": {
         "showBorder": true
       }
